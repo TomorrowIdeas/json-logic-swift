@@ -210,7 +210,13 @@ struct Not: Expression {
     let lhs: Expression
 
     func evalWithData(_ data: JSON?) throws -> JSON {
-        let lhsBool = try lhs.evalWithData(data)
+        let lhsBool: JSON
+
+        if let array = self.lhs as? ArrayOfExpressions, let lhs = array.expressions.first {
+            lhsBool = try lhs.evalWithData(data)
+        } else {
+            lhsBool = try self.lhs.evalWithData(data)
+        }
 
         return JSON.Bool(!lhsBool.thruthy())
     }
@@ -615,9 +621,16 @@ class Parser {
             return ArrayOfExpressions(expressions: arrayOfExpressions)
         case let .Dictionary(object):
             var arrayOfExpressions: [Expression] = []
-            for (key, value) in object {
-                arrayOfExpressions.append(try parseExpressionWithKeyword(key, value: value))
+            do {
+                for (key, value) in object {
+                    arrayOfExpressions.append(try parseExpressionWithKeyword(key, value: value))
+                }
+            } catch ParseError.UnimplementedExpressionFor {
+                arrayOfExpressions.append(SingleValueExpression(json: JSON.Dictionary(object)))
+            } catch {
+                throw error
             }
+
             //use only the first for now, we should warn or throw error here if array count > 1
             return arrayOfExpressions.first!
         }
