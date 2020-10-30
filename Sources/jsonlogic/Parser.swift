@@ -427,7 +427,13 @@ struct MissingSome: Expression {
             return JSON.Null
         }
 
-        let missingKeys = keys.filter({ valueForKey($0.string, in: data) == JSON.Null })
+        let missingKeys = keys.filter({ switch valueForKey($0, in: data) {
+        case .Null:
+            return true
+        default:
+            return false
+        }
+        })
         return JSON.Array(missingKeys.count > minMissing ? missingKeys : [])
     }
 
