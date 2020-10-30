@@ -427,7 +427,7 @@ struct MissingSome: Expression {
             return JSON.Null
         }
 
-        let missingKeys = keys.filter({ switch valueForKey($0, in: data) {
+        let missingKeys = keys.filter({ switch valueForKey($0.string, in: data) {
         case .Null:
             return true
         default:
