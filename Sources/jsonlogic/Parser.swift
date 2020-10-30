@@ -372,7 +372,13 @@ struct Missing: Expression {
     func evalWithData(_ data: JSON?) throws -> JSON {
         let keys = try evaluateVarPathFromData(data)
 
-        let missingKeys = keys.filter({ valueForKey($0, in: data) == JSON.Null })
+        let missingKeys = keys.filter({ switch valueForKey($0, in: data) {
+        case .Null:
+            return true
+        default:
+            return false
+        }
+        })
         return JSON.Array(missingKeys.map {JSON.String($0)})
     }
 
